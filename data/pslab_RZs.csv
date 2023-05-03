@@ -1,0 +1,2 @@
+name,vlan_id,vni_id,routing_policy_name,import_route_targets,export_route_targets
+vrf,4001,504001,,,

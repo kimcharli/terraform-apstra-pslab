@@ -1,0 +1,3 @@
+vn_node_id,vn_name,rz_name,vn_type,vn_id,reserved_vlan_id,dhcp_service,ipv4_enabled,ipv6_enabled,virtual_gateway_ipv4_enabled,virtual_gateway_ipv6_enabled,ipv4_subnet,ipv6_subnet,virtual_gateway_ipv4,virtual_gateway_ipv6,bound_to_pslab_border_001_leaf_pair1,bound_to_pslab_server_001_leaf_pair1
+,vn100,vrf,vxlan,200100,,,X,,X,,10.0.100.0/24,,,,X,x
+,vn101,vrf,vxlan,200101,,,,,,,,,,,,x
