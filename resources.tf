@@ -32,6 +32,7 @@ resource "apstra_datacenter_resource_pool_allocation" "asn" {
 
 # Assign IPv4 pools to fabric roles to eliminate build errors so we can deploy
 resource "apstra_datacenter_resource_pool_allocation" "ipv4" {
+  depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
   for_each     = local.ipv4_pools
   blueprint_id = apstra_datacenter_blueprint.blueprint-pslab.id
   role         = each.key
