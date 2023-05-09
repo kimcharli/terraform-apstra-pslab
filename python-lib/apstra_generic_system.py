@@ -24,7 +24,7 @@ class CkApstraGenericSystem:
         self.system2_if_name = system2_if_name
         self.speed = speed
         self.id = None
-        self.link_id = None # TODO: multiple links
+        self.interface_id = None # TODO: multiple links
         self.get_gs_id()
 
 
@@ -122,8 +122,8 @@ class CkApstraGenericSystem:
         link_updated = self.blueprint.patch_leaf_server_link(update_dict)
 
         self.get_gs_id()
-        self.get_link_id()
-        print(f"add_generic_system: generic_system {self.label} created with {self.id=}, {self.link_id=}")
+        self.get_interface_id()
+        print(f"add_generic_system: generic_system {self.label} created with {self.id=}, {self.interface_id=}")
 
 
     def delete_generic_system(self):
@@ -131,32 +131,47 @@ class CkApstraGenericSystem:
         Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/batch?comment=batch-api
         Request Method: POST
         Status Code: 201 CREATED
-        {"operations": [{"path":"/delete-switch-system-links","method":"POST",
-                "payload": {
-                    "link_ids":["pslab_server_001_leaf1<->gs-0002(link-000000001)[1]",
-                    "pslab_server_001_leaf2<->gs-0002(link-000000002)[1]"]
-                    }
-                }]}
+        {"operations":[
+            {"path":"/obj-policy-batch-apply","method":"PATCH",
+            "payload":{"application_points":[{"id":"197uS2DUG75fA8BfvS4","policies":[{"policy":"c2031526-68e2-47e8-a8ba-864984ee5cd9","used":false}]}]}},
+            {"path":"/delete-switch-system-links","method":"POST",
+            "payload":{"link_ids":["pslab_server_001_leaf1<->gs-0002(link-000000001)[1]","pslab_server_001_leaf2<->gs-0002(link-000000002)[1]"]}}]}
         '''
-        pass
+        if self.id is None:
+            print(f"delete_generic_system: Generic system {self.label} does not exist")
+            return
+        interface_query = f"node('system', label='{self.label}').out().node('interface', name='gs_intf').out().node('link', name='link').in_().node('interface', name='interface').where(lambda gs_intf, interface: gs_intf != interface)"
+        found_interface = self.blueprint.query(interface_query)
+        links = [link['link']['id'] for link in found_interface if link['interface']['if_type'] != "port_channel"]
+        batch_spec = {
+            "operations": [{
+                "path":"/delete-switch-system-links","method":"POST",
+                "payload": {
+                    "link_ids": links
+                    }
+                }]
+            }
+        batch_response = self.blueprint.batch(batch_spec, params={"comment": "batch-api"})
+        print(f"delete_generic_system: {batch_spec=} {batch_response=}")
 
-    def get_link_id(self):
+
+    def get_interface_id(self):
         '''
         Return the link id or None if not found
         TODO: use interface name for multiple link casses
         '''
-        if self.link_id is not None:
-            return self.link_id
-        link_query = f"node('system', label='{self.label}').out().node('interface', name='gs_intf').out().node('link').in_().node('interface', name='interface').where(lambda gs_intf, interface: gs_intf != interface)"
-        found_link = self.blueprint.query(link_query)
-        ae_link_id = [link['interface']['id'] for link in found_link if link['interface']['if_type'] == "port_channel"]
-        print(f"get_link_id: {ae_link_id=}")
-        if len(ae_link_id) > 0:
-            self.link_id = ae_link_id[0]
-            return self.link_id
-        link_id = [link['interface']['id'] for link in found_link if link['interface']['if_type'] == "ethernet"]
-        self.link_id = link_id[0]
-        return self.link_id
+        if self.interface_id is not None:
+            return self.interface_id
+        interface_query = f"node('system', label='{self.label}').out().node('interface', name='gs_intf').out().node('link').in_().node('interface', name='interface').where(lambda gs_intf, interface: gs_intf != interface)"
+        found_interface = self.blueprint.query(interface_query)
+        ae_interface_id = [link['interface']['id'] for link in found_interface if link['interface']['if_type'] == "port_channel"]
+        print(f"get_interface_id: {ae_interface_id=}")
+        if len(ae_interface_id) > 0:
+            self.interface_id = ae_interface_id[0]
+            return self.interface_id
+        interface_id = [link['interface']['id'] for link in found_interface if link['interface']['if_type'] == "ethernet"]
+        self.interface_id = interface_id[0]
+        return self.interface_id
 
 
     def print_id(self):

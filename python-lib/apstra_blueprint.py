@@ -51,6 +51,14 @@ class CkApstraBlueprint:
         '''
         return self.session.session.patch(f"{self.url_prefix}/obj-policy-batch-apply", json=policy_spec, params=params)
 
+    def batch(self, batch_spec, params=None):
+        '''
+        Run API commands in batch
+        #         Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/batch?comment=batch-api
+        # Request Method: POST
+        '''
+        return self.session.session.post(f"{self.url_prefix}/batch", json=batch_spec, params=params)
+
 
 if __name__ == "__main__":
     apstra = CkApstraSession("10.85.192.50", 443, "admin", "zaq1@WSXcde3$RFV")

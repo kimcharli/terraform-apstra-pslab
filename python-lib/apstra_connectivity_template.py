@@ -62,6 +62,12 @@ class CkApstraConnectivityTemplate:
                 print(f"attach: ERROR: {attached_policy.status_code=}")
 
 
+def delete_gs(gs):
+    print("#### sleeping 5 seconds")
+    time.sleep(5)
+    print("#### deleting")
+    gs.delete_generic_system()
+
 def main():
     apstra = CkApstraSession("10.85.192.50", 443, "admin", "zaq1@WSXcde3$RFV")
     bp = CkApstraBlueprint(apstra, "pslab")
@@ -69,7 +75,9 @@ def main():
     gs.add_generic_system()
     ct_input = CkApstraConnectivityTemplateInput("vn100")
     ct = CkApstraConnectivityTemplate(apstra, bp, ct_input)
-    ct.attach(gs.get_link_id())
+    ct.attach(gs.get_interface_id())
+
+    delete_gs(gs)
 
 if __name__ == '__main__':
     main()
