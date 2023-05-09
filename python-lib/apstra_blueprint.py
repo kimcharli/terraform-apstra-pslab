@@ -45,6 +45,13 @@ class CkApstraBlueprint:
         # Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/leaf-server-link-labels
         return self.session.session.patch(f"{self.url_prefix}/leaf-server-link-labels", json=link_spec)
 
+    def patch_obj_policy_batch_apply(self, policy_spec, params=None):
+        '''
+        Apply policies in a batch
+        '''
+        return self.session.session.patch(f"{self.url_prefix}/obj-policy-batch-apply", json=policy_spec, params=params)
+
+
 if __name__ == "__main__":
     apstra = CkApstraSession("10.85.192.50", 443, "admin", "zaq1@WSXcde3$RFV")
     bp = CkApstraBlueprint(apstra, "pslab")

@@ -24,7 +24,19 @@ class CkApstraGenericSystem:
         self.system2_if_name = system2_if_name
         self.speed = speed
         self.id = None
+        self.link_id = None # TODO: multiple links
+        self.get_gs_id()
 
+
+    def get_gs_id(self):
+        '''Return the generic system id or None if not found'''
+        system_label_query = f"node('system', label='{self.label}', name='system')"
+        found_system = self.blueprint.query(system_label_query)
+        # print(f"get_gs_id: {found_system=}")
+        if len(found_system) > 0:
+            self.id = found_system[0]['system']['id']
+            self.print_id()
+        return self.id
 
     def get_transformaion_id(self, device_profile_id, intf_name, speed):
         '''Return transformation_id if the interface name and speed match'''
@@ -42,7 +54,11 @@ class CkApstraGenericSystem:
                         # self.logger.warning(f"{intf_name=}, {intf=}")
                         return transformation['transformation_id']
 
-    def build_gs_dict(self):
+    def add_generic_system(self):
+        '''Add a generic system to the blueprint if it does not exist'''
+        if self.id is not None:
+            print(f"add_generic_system: Generic system {self.label} already exists")
+            return
         system1 = self.blueprint.get_system_with_im(self.system1_label)
         tfid1 = self.get_transformaion_id(system1['im']['device_profile_id'], self.system1_if_name, self.speed)
         system2 = self.blueprint.get_system_with_im(self.system2_label)
@@ -88,7 +104,7 @@ class CkApstraGenericSystem:
         }
         # print(f"{self.gs_dict=}")
         new_links = self.blueprint.add_generic_system(self.gs_dict).json()
-        # print(f"{new_links=}")
+        print(f"add_generic_system: {new_links=}")
         # make lacp_active if system2_label is not None
         if self.system2_label is not None:
             update_dict = {
@@ -104,7 +120,43 @@ class CkApstraGenericSystem:
                 }
             }
         link_updated = self.blueprint.patch_leaf_server_link(update_dict)
-        print(f"{link_updated=}")
+
+        self.get_gs_id()
+        self.get_link_id()
+        print(f"add_generic_system: generic_system {self.label} created with {self.id=}, {self.link_id=}")
+
+
+    def delete_generic_system(self):
+        '''
+        Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/batch?comment=batch-api
+        Request Method: POST
+        Status Code: 201 CREATED
+        {"operations": [{"path":"/delete-switch-system-links","method":"POST",
+                "payload": {
+                    "link_ids":["pslab_server_001_leaf1<->gs-0002(link-000000001)[1]",
+                    "pslab_server_001_leaf2<->gs-0002(link-000000002)[1]"]
+                    }
+                }]}
+        '''
+        pass
+
+    def get_link_id(self):
+        '''
+        Return the link id or None if not found
+        TODO: use interface name for multiple link casses
+        '''
+        if self.link_id is not None:
+            return self.link_id
+        link_query = f"node('system', label='{self.label}').out().node('interface', name='gs_intf').out().node('link').in_().node('interface', name='interface').where(lambda gs_intf, interface: gs_intf != interface)"
+        found_link = self.blueprint.query(link_query)
+        ae_link_id = [link['interface']['id'] for link in found_link if link['interface']['if_type'] == "port_channel"]
+        print(f"get_link_id: {ae_link_id=}")
+        if len(ae_link_id) > 0:
+            self.link_id = ae_link_id[0]
+            return self.link_id
+        link_id = [link['interface']['id'] for link in found_link if link['interface']['if_type'] == "ethernet"]
+        self.link_id = link_id[0]
+        return self.link_id
 
 
     def print_id(self):
@@ -115,7 +167,6 @@ if __name__ == "__main__":
     apstra = CkApstraSession("10.85.192.50", 443, "admin", "zaq1@WSXcde3$RFV")
     bp = CkApstraBlueprint(apstra, "pslab")
     gs = CkApstraGenericSystem(apstra, bp, "gs-0002", "host-0002", "AOS-2x10-1", ["server"], "pslab_server_001_leaf1", "xe-0/0/12", "pslab_server_001_leaf2", "xe-0/0/13", 10)
-    gs.build_gs_dict()
-    gs.print_id()
+    gs.add_generic_system()
 
 

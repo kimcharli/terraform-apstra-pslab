@@ -2,3 +2,4 @@ temp/
 .terraform*
 .terraform*/*
 terraform.*
+*.pyc
