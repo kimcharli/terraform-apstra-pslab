@@ -1,6 +1,18 @@
+locals {
+  config = yamldecode(file("${path.module}/config.yaml"))
+}
+
+output "yaml_config" {
+  value = local.config
+}
+
+output "yaml_logical_device" {
+  value = local.config.logical_device
+}
+
 #### spine
 resource "apstra_logical_device" "spine" {
-  name = "pslab-spine"
+  name = local.config.logical_device.spine.name
   panels = [
     {
       rows = 2
@@ -17,7 +29,7 @@ resource "apstra_logical_device" "spine" {
 }
 
 locals {
-  spine_device_profile ="Juniper_QFX10002-36Q_Junos"
+  spine_device_profile = local.config.logical_device.spine.device_profile_id
   spine_map = [
     { // map logical 1/1 - 1/32 to physical et-0/0/0 - et-0/0/31
       ld_panel       = 1
@@ -38,7 +50,7 @@ locals {
 }
 
 resource "apstra_interface_map" "spine" {
-  name              = "pslab-spine"
+  name              = local.config.logical_device.spine.name
   logical_device_id = apstra_logical_device.spine.id
   device_profile_id = local.spine_device_profile
   interfaces        = flatten([local.spine_interfaces])
@@ -47,7 +59,7 @@ resource "apstra_interface_map" "spine" {
 
 #### border leaf
 resource "apstra_logical_device" "border-leaf" {
-  name = "pslab-border-leaf"
+  name = local.config.logical_device.border-leaf.name
   panels = [
     {
       rows = 2
@@ -74,7 +86,7 @@ resource "apstra_logical_device" "border-leaf" {
 }
 
 locals {
-  border_leaf_device_profile = "Juniper_QFX5120-48Y_Junos"
+  border_leaf_device_profile = local.config.logical_device.border-leaf.device_profile_id
   border_map = [
     { // map logical 1/1 - 1/24 to physical xe-0/0/0 - xe-0/0/23
       ld_panel       = 1
@@ -102,7 +114,7 @@ locals {
 }
 
 resource "apstra_interface_map" "border-leaf" {
-  name              = "pslab-border"
+  name              = local.config.logical_device.border-leaf.name
   logical_device_id = apstra_logical_device.border-leaf.id
   device_profile_id = local.border_leaf_device_profile
   interfaces        = flatten([local.border_interfaces])
@@ -112,7 +124,7 @@ resource "apstra_interface_map" "border-leaf" {
 #### server leaf
 
 resource "apstra_logical_device" "server-leaf" {
-  name = "pslab-server-leaf"
+  name = local.config.logical_device.server-leaf.name
   panels = [
     {
       rows = 2
@@ -134,7 +146,7 @@ resource "apstra_logical_device" "server-leaf" {
 }
 
 locals {
-  server_leaf_device_profile = "Juniper_QFX5100-48S_Junos"
+  server_leaf_device_profile = local.config.logical_device.server-leaf.device_profile_id
   server_map = [
     { // map logical 1/1 - 1/48 to physical xe-0/0/0 - xe-0/0/47
       ld_panel       = 1
@@ -162,7 +174,7 @@ locals {
 }
 
 resource "apstra_interface_map" "server-leaf" {
-  name              = "pslab-server-leaf"
+  name              = local.config.logical_device.server-leaf.name
   logical_device_id = apstra_logical_device.server-leaf.id
   device_profile_id = local.server_leaf_device_profile
   interfaces        = flatten([local.server_interfaces])

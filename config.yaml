@@ -1,0 +1,42 @@
+---
+logical_device:
+  spine:
+    name: pslab-spine  # reuse for interface-map name
+    device_profile_id: Juniper_QFX10002-36Q_Junos
+    panels:
+    - rows: 2
+      columns: 18
+      port_groups:
+      - port_count: 36
+        port_speed: 40G
+        port_roles: [ 'leaf', 'generic']
+  border-leaf:
+    name: pslab-border-leaf
+    device_profile_id: Juniper_QFX5120-48Y_Junos
+    panels:
+    - rows: 2
+      columns: 28
+      port_groups:
+      - port_count: 24
+        port_speed: 10G
+        port_roles: [ 'access', 'generic']
+      - port_count: 24
+        port_speed: 25G
+        port_roles: [ 'access', 'generic']
+      - port_count: 8
+        port_speed: 40G
+        port_roles: [ 'spine', 'generic']
+  server-leaf:
+    name: pslab-server-leaf
+    device_profile_id: Juniper_QFX5100-48S_Junos
+    panels:
+    - rows: 2
+      columns: 27
+      port_groups:
+      - port_count: 48
+        port_speed: 10G
+        port_roles: [ 'access', 'generic']
+      - port_count: 6
+        port_speed: 40G
+        port_roles: [ 'spine', 'generic']
+
