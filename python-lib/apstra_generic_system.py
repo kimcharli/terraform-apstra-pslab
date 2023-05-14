@@ -1,34 +1,71 @@
 #!/usr/bin/env python3.11
 
+from typing import List, Optional
 from apstra_session import CkApstraSession
 from apstra_blueprint import CkApstraBlueprint
 
-class CkApstraGenericSystem:
 
-    def __init__(self, 
-                 session: CkApstraSession, 
-                 blueprint: CkApstraBlueprint, 
-                 label, hostname, logical_device, tags,
-                 system1_label, system1_if_name,
-                 system2_label, system2_if_name,
-                 speed) -> None:
+class CkLinkSystem:
+    def __init__(
+        self,
+        label: str,
+        intf_name: str,
+    ) -> None:
+        self.label = label
+        self.id = None
+        self.intf_name = intf_name
+        self.intf_id = None
+
+class CkLink:
+    def __init__(
+        self,
+        system1_label: str,
+        system1_if_name: str,
+        system2_label: str,
+        system2_if_name: str,
+        speed: str
+        ) -> None:
+        self.system1 = CkLinkSystem(system1_label, system1_if_name)
+        self.system2 = CkLinkSystem(system2_label, system2_if_name)
+        self.speed = speed
+        self.id = None
+
+
+class CkApstraGenericSystem:
+    def __init__(
+        self, 
+        session: CkApstraSession, 
+        blueprint: CkApstraBlueprint, 
+        label: str, 
+        hostname: str, 
+        logical_device: str, 
+        tags: List[str],
+        intf_name1: str,
+        system1_label: str, 
+        system1_if_name: str,
+        intf_name2: str,
+        system2_label: str, 
+        system2_if_name: str,
+        speed: int
+    ) -> None:
         self.session = session
         self.blueprint = blueprint
         self.label = label
         self.hostname = hostname
         self.logical_device = logical_device
         self.tags = tags
+        self.intf_name1 = intf_name1
         self.system1_label = system1_label
         self.system1_if_name = system1_if_name
+        self.intf_name2 = intf_name2
         self.system2_label = system2_label
         self.system2_if_name = system2_if_name
         self.speed = speed
         self.id = None
-        self.interface_id = None # TODO: multiple links
+        self.interface_id = None  # TODO: multiple links
         self.get_gs_id()
 
-
-    def get_gs_id(self):
+    def get_gs_id(self) -> Optional[str]:
         '''Return the generic system id or None if not found'''
         system_label_query = f"node('system', label='{self.label}', name='system')"
         found_system = self.blueprint.query(system_label_query)
@@ -38,8 +75,18 @@ class CkApstraGenericSystem:
             self.print_id()
         return self.id
 
-    def get_transformaion_id(self, device_profile_id, intf_name, speed):
-        '''Return transformation_id if the interface name and speed match'''
+    def get_transformation_id(self, device_profile_id: str, intf_name: str, speed: int) -> Optional[str]:
+        """
+        Return transformation_id if the interface name and speed match.
+        
+        Args:
+            device_profile_id (str): The device profile ID.
+            intf_name (str): The interface name.
+            speed (int): The speed value.
+
+        Returns:
+            str: The transformation ID, or None if not found.
+        """
         device_profile_result = self.session.get_device_profile(device_profile_id)
         ports_list = device_profile_result['ports']
 
@@ -54,15 +101,15 @@ class CkApstraGenericSystem:
                         # self.logger.warning(f"{intf_name=}, {intf=}")
                         return transformation['transformation_id']
 
-    def add_generic_system(self):
+    def add_generic_system(self) -> None:
         '''Add a generic system to the blueprint if it does not exist'''
         if self.id is not None:
             print(f"add_generic_system: Generic system {self.label} already exists")
             return
         system1 = self.blueprint.get_system_with_im(self.system1_label)
-        tfid1 = self.get_transformaion_id(system1['im']['device_profile_id'], self.system1_if_name, self.speed)
+        tfid1 = self.get_transformation_id(system1['im']['device_profile_id'], self.system1_if_name, self.speed)
         system2 = self.blueprint.get_system_with_im(self.system2_label)
-        tfid2 = self.get_transformaion_id(system2['im']['device_profile_id'], self.system1_if_name, self.speed)
+        tfid2 = self.get_transformation_id(system2['im']['device_profile_id'], self.system1_if_name, self.speed)
         logical_device = self.session.get_logical_device(self.logical_device)
         # print(f"{logical_device=} for {self.logical_device=}")
         del logical_device['created_at']
@@ -103,17 +150,21 @@ class CkApstraGenericSystem:
             ]
         }
         # print(f"{self.gs_dict=}")
-        new_links = self.blueprint.add_generic_system(self.gs_dict).json()
-        print(f"add_generic_system: {new_links=}")
+        new_link_ids = self.blueprint.add_generic_system(self.gs_dict)
+        if new_link_ids is None or len(new_link_ids) < 1:
+            print(f"add_generic_system: Generic system {self.label} not created")
+            return
+        # new_links = new_generic_system.json()
+        print(f"add_generic_system: {new_link_ids=}")
         # make lacp_active if system2_label is not None
         if self.system2_label is not None:
             update_dict = {
                 "links": {
-                    f"{new_links['ids'][0]}": {
+                    f"{new_link_ids[0]}": {
                         "group_label": "link1",
                         "lag_mode": "lacp_active"
                     },
-                    f"{new_links['ids'][1]}": {
+                    f"{new_link_ids[1]}": {
                         "group_label": "link1",
                         "lag_mode": "lacp_active"
                     }
@@ -121,22 +172,27 @@ class CkApstraGenericSystem:
             }
         link_updated = self.blueprint.patch_leaf_server_link(update_dict)
 
+        # 
+        # Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/cabling-map?comment=cabling-map-update
+        # Request Method: PATCH
+        # Status Code: 204 NO CONTENT
+        #
+        # {"links":[
+        #     {   "endpoints":[{"interface":{"id":"wN_ld_OxaQPkvyi2FXU"}},{"interface":{"if_name":"eth0","id":"6To186vmAGbnKU_j9dY"}}],
+        #         "id":"pslab_server_001_leaf2<->gs-0004(link-000000002)[1]"
+        #     },
+        #     {   "endpoints":[{"interface":{"id":"XU3SOJN0iXlXBTW_LSM"}},{"interface":{"if_name":"eth1","id":"3wsDQy9hOK8jlucqgpY"}}],
+        #         "id":"pslab_server_001_leaf1<->gs-0004(link-000000001)[1]"
+        #     }
+        # ]}
+
         self.get_gs_id()
         self.get_interface_id()
         print(f"add_generic_system: generic_system {self.label} created with {self.id=}, {self.interface_id=}")
 
 
-    def delete_generic_system(self):
-        '''
-        Request URL: https://10.85.192.50/api/blueprints/17b982a1-5023-48e2-88e5-5707e3e154b0/batch?comment=batch-api
-        Request Method: POST
-        Status Code: 201 CREATED
-        {"operations":[
-            {"path":"/obj-policy-batch-apply","method":"PATCH",
-            "payload":{"application_points":[{"id":"197uS2DUG75fA8BfvS4","policies":[{"policy":"c2031526-68e2-47e8-a8ba-864984ee5cd9","used":false}]}]}},
-            {"path":"/delete-switch-system-links","method":"POST",
-            "payload":{"link_ids":["pslab_server_001_leaf1<->gs-0002(link-000000001)[1]","pslab_server_001_leaf2<->gs-0002(link-000000002)[1]"]}}]}
-        '''
+    def delete_generic_system(self) -> None:
+        '''Delete a generic system from the blueprint if it exists'''
         if self.id is None:
             print(f"delete_generic_system: Generic system {self.label} does not exist")
             return
@@ -155,9 +211,8 @@ class CkApstraGenericSystem:
         print(f"delete_generic_system: {batch_spec=} {batch_response=}")
 
 
-    def get_interface_id(self):
-        '''
-        Return the link id or None if not found
+    def get_interface_id(self) -> Optional[str]:
+        '''Return the link id or None if not found
         TODO: use interface name for multiple link casses
         '''
         if self.interface_id is not None:
@@ -174,14 +229,15 @@ class CkApstraGenericSystem:
         return self.interface_id
 
 
-    def print_id(self):
+    def print_id(self) -> None:
         print(f"{self.id=}")
 
 
 if __name__ == "__main__":
     apstra = CkApstraSession("10.85.192.50", 443, "admin", "zaq1@WSXcde3$RFV")
     bp = CkApstraBlueprint(apstra, "pslab")
-    gs = CkApstraGenericSystem(apstra, bp, "gs-0002", "host-0002", "AOS-2x10-1", ["server"], "pslab_server_001_leaf1", "xe-0/0/12", "pslab_server_001_leaf2", "xe-0/0/13", 10)
+    # gs = CkApstraGenericSystem(apstra, bp, "gs-0002", "host-0002", "AOS-2x10-1", ["server"], "pslab_server_001_leaf1", "xe-0/0/12", "pslab_server_001_leaf2", "xe-0/0/13", 10)
+    # gs = CkApstraGenericSystem(apstra, bp, "gs-0003", "host-0003", "AOS-2x10-1", ["server"], "pslab_server_001_leaf1", "xe-0/0/14", "pslab_server_001_leaf2", "xe-0/0/14", 10)
+    gs = CkApstraGenericSystem(apstra, bp, "gs-0004", "host-0004", "AOS-2x10-1", ["server"], "eth0", "pslab_server_001_leaf1", "xe-0/0/15", "eth1", "pslab_server_001_leaf2", "xe-0/0/15", 10)
     gs.add_generic_system()
-
 
