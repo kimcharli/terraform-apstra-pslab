@@ -2,122 +2,46 @@ locals {
   config = yamldecode(file("${path.module}/config.yaml"))
 }
 
-output "yaml_config" {
-  value = local.config
-}
-
-output "yaml_logical_device" {
-  value = local.config.logical_device
-}
 
 #### spine
 resource "apstra_logical_device" "spine" {
   name = local.config.logical_device.spine.name
-  panels = [
-    {
-      rows = 2
-      columns = 18
-      port_groups = [
-        {
-          port_count = 36
-          port_speed = "40G"
-          port_roles = ["leaf", "generic"]
-        },
-      ]
-    }
-  ]
-}
-
-locals {
-  spine_device_profile = local.config.logical_device.spine.device_profile_id
-  spine_map = [
-    { // map logical 1/1 - 1/32 to physical et-0/0/0 - et-0/0/31
-      ld_panel       = 1
-      ld_first_port  = 1
-      phy_prefix     = "et-0/0/"
-      phy_first_port = 0
-      count          = 36
-    },
-  ]
-  spine_interfaces = [
-    for map in local.spine_map : [
-      for i in range(map.count) : {
-        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
-        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
-      }
-    ]
-  ]
+  panels = local.config.logical_device.spine.panels
 }
 
 resource "apstra_interface_map" "spine" {
   name              = local.config.logical_device.spine.name
   logical_device_id = apstra_logical_device.spine.id
-  device_profile_id = local.spine_device_profile
-  interfaces        = flatten([local.spine_interfaces])
+  device_profile_id = local.config.logical_device.spine.device_profile_id
+  interfaces        = flatten([
+    for map in local.config.logical_device.spine.device_mapping : [
+      for i in range(map.count) : {
+        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
+        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
+      }
+    ]
+  ])
 }
 
 
 #### border leaf
 resource "apstra_logical_device" "border-leaf" {
   name = local.config.logical_device.border-leaf.name
-  panels = [
-    {
-      rows = 2
-      columns = 28
-      port_groups = [
-        {
-          port_count = 24
-          port_speed = "10G"
-          port_roles = ["access", "generic"]
-        },
-        {
-          port_count = 24
-          port_speed = "25G"
-          port_roles = ["access", "generic"]
-        },
-        {
-          port_count = 8
-          port_speed = "40G"
-          port_roles = ["spine", "generic"]
-        },
-      ]
-    }
-  ]
-}
-
-locals {
-  border_leaf_device_profile = local.config.logical_device.border-leaf.device_profile_id
-  border_map = [
-    { // map logical 1/1 - 1/24 to physical xe-0/0/0 - xe-0/0/23
-      ld_panel       = 1
-      ld_first_port  = 1
-      phy_prefix     = "xe-0/0/"
-      phy_first_port = 0
-      count          = 24
-    },
-    { // map logical 1/25 - 1/56 to physical et-0/0/24 - xe-0/0/55
-      ld_panel       = 1
-      ld_first_port  = 25
-      phy_prefix     = "et-0/0/"
-      phy_first_port = 24
-      count          = 32
-    },
-  ]
-  border_interfaces = [
-    for map in local.border_map : [
-      for i in range(map.count) : {
-        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
-        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
-      }
-    ]
-  ]
+  panels = local.config.logical_device.border-leaf.panels
 }
 
 resource "apstra_interface_map" "border-leaf" {
   name              = local.config.logical_device.border-leaf.name
   logical_device_id = apstra_logical_device.border-leaf.id
-  device_profile_id = local.border_leaf_device_profile
-  interfaces        = flatten([local.border_interfaces])
+  device_profile_id = local.config.logical_device.border-leaf.device_profile_id
+  interfaces        = flatten([
+    for map in local.config.logical_device.border-leaf.device_mapping: [
+      for i in range(map.count) : {
+        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
+        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
+      }
+    ]    
+  ])
 }
 
 
@@ -125,59 +49,21 @@ resource "apstra_interface_map" "border-leaf" {
 
 resource "apstra_logical_device" "server-leaf" {
   name = local.config.logical_device.server-leaf.name
-  panels = [
-    {
-      rows = 2
-      columns = 27
-      port_groups = [
-        {
-          port_count = 48
-          port_speed = "10G"
-          port_roles = ["access", "generic"]
-        },
-        {
-          port_count = 6
-          port_speed = "40G"
-          port_roles = ["spine", "generic"]
-        },
-      ]
-    }
-  ]
-}
-
-locals {
-  server_leaf_device_profile = local.config.logical_device.server-leaf.device_profile_id
-  server_map = [
-    { // map logical 1/1 - 1/48 to physical xe-0/0/0 - xe-0/0/47
-      ld_panel       = 1
-      ld_first_port  = 1
-      phy_prefix     = "xe-0/0/"
-      phy_first_port = 0
-      count          = 48
-    },
-    { // map logical 1/49 - 1/56 to physical et-0/0/48 - xe-0/0/53
-      ld_panel       = 1
-      ld_first_port  = 49
-      phy_prefix     = "et-0/0/"
-      phy_first_port = 48
-      count          = 6
-    },
-  ]
-  server_interfaces = [
-    for map in local.server_map : [
-      for i in range(map.count) : {
-        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
-        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
-      }
-    ]
-  ]
+  panels = local.config.logical_device.server-leaf.panels
 }
 
 resource "apstra_interface_map" "server-leaf" {
   name              = local.config.logical_device.server-leaf.name
   logical_device_id = apstra_logical_device.server-leaf.id
-  device_profile_id = local.server_leaf_device_profile
-  interfaces        = flatten([local.server_interfaces])
+  device_profile_id = local.config.logical_device.server-leaf.device_profile_id
+  interfaces        = flatten([
+    for map in local.config.logical_device.server-leaf.device_mapping: [
+      for i in range(map.count) : {
+        logical_device_port     = format("%d/%d", map.ld_panel, map.ld_first_port + i)
+        physical_interface_name = format("%s%d", map.phy_prefix, map.phy_first_port + i)
+      }
+    ]
+  ])
 }
 
 

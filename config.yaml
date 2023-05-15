@@ -10,6 +10,12 @@ logical_device:
       - port_count: 36
         port_speed: 40G
         port_roles: [ 'leaf', 'generic']
+    device_mapping:
+    - ld_panel: 1
+      ld_first_port: 1
+      phy_prefix: et-0/0/
+      phy_first_port: 0
+      count: 36
   border-leaf:
     name: pslab-border-leaf
     device_profile_id: Juniper_QFX5120-48Y_Junos
@@ -26,6 +32,17 @@ logical_device:
       - port_count: 8
         port_speed: 40G
         port_roles: [ 'spine', 'generic']
+    device_mapping:
+    - ld_panel: 1
+      ld_first_port: 1
+      phy_prefix: xe-0/0/
+      phy_first_port: 0
+      count: 24
+    - ld_panel: 1
+      ld_first_port: 25
+      phy_prefix: et-0/0/
+      phy_first_port: 24
+      count: 32
   server-leaf:
     name: pslab-server-leaf
     device_profile_id: Juniper_QFX5100-48S_Junos
@@ -39,4 +56,17 @@ logical_device:
       - port_count: 6
         port_speed: 40G
         port_roles: [ 'spine', 'generic']
+    device_mapping:
+    - ld_panel: 1
+      ld_first_port: 1
+      phy_prefix: xe-0/0/
+      phy_first_port: 0
+      count: 48
+    - ld_panel: 1
+      ld_first_port: 49
+      phy_prefix: et-0/0/
+      phy_first_port: 48
+      count: 6
+
+
 
