@@ -67,57 +67,32 @@ resource "apstra_interface_map" "server-leaf" {
 }
 
 
-# ASN pools, IPv4 pools and switch devices will be allocated using looping
-# resources. These three `local` maps are what we'll loop over.
-locals {
-  asn_pools = {
-    spine_asns = [apstra_asn_pool.asn.id]
-    leaf_asns  = [apstra_asn_pool.asn.id]
-  }
-  ipv4_pools = {
-    spine_loopback_ips  = [apstra_ipv4_pool.loop.id]
-    leaf_loopback_ips   = [apstra_ipv4_pool.loop.id]
-    spine_leaf_link_ips = [apstra_ipv4_pool.fabric.id]
-  }
-  switch_map = {
-    spines = {
-      switches = [ "spine1", "spine2" ]
-      interface_map_id = apstra_interface_map.spine.id
-    },
-    border_leafs = {
-      switches = [ "pslab_border_001_leaf1", "pslab_border_001_leaf2"]
-      interface_map_id = apstra_interface_map.border-leaf.id
-    },
-    server_leafs = {
-      switches = [ "pslab_server_001_leaf1", "pslab_server_001_leaf2"]
-      interface_map_id = apstra_interface_map.server-leaf.id
-    },
-  }
-}
-
 # Assign interface maps to fabric roles to eliminate build errors so we can deploy
 
 resource "apstra_datacenter_device_allocation" "spines" {
   depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
-  for_each         = toset(local.switch_map.spines.switches)
+  for_each         = local.config.logical_device.spine.device_allocation
   blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
   node_name        = each.key
-  interface_map_id = local.switch_map.spines.interface_map_id
+  device_key       = each.value
+  interface_map_id = apstra_interface_map.spine.id
 }
 
 resource "apstra_datacenter_device_allocation" "border-leafs" {
   depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
-  for_each         = toset(local.switch_map.border_leafs.switches)
+  for_each         = local.config.logical_device.border-leaf.device_allocation
   blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
   node_name        = each.key
-  interface_map_id = local.switch_map.border_leafs.interface_map_id
+  device_key       = each.value
+  interface_map_id = apstra_interface_map.border-leaf.id
 }
 
 resource "apstra_datacenter_device_allocation" "server-leafs" {
   depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
-  for_each         = toset(local.switch_map.server_leafs.switches)
+  for_each         = local.config.logical_device.server-leaf.device_allocation
   blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
   node_name        = each.key
-  interface_map_id = local.switch_map.server_leafs.interface_map_id
+  device_key       = each.value
+  interface_map_id = apstra_interface_map.server-leaf.id
 }
 

@@ -16,6 +16,9 @@ logical_device:
       phy_prefix: et-0/0/
       phy_first_port: 0
       count: 36
+    device_allocation:
+      spine1: EK069
+      spine2: FQ824
   border-leaf:
     name: pslab-border-leaf
     device_profile_id: Juniper_QFX5120-48Y_Junos
@@ -43,6 +46,9 @@ logical_device:
       phy_prefix: et-0/0/
       phy_first_port: 24
       count: 32
+    device_allocation:
+      pslab_border_001_leaf1: XH3119430106
+      pslab_border_001_leaf2: XH3119430153
   server-leaf:
     name: pslab-server-leaf
     device_profile_id: Juniper_QFX5100-48S_Junos
@@ -67,6 +73,26 @@ logical_device:
       phy_prefix: et-0/0/
       phy_first_port: 48
       count: 6
+    device_allocation:
+      pslab_server_001_leaf1: TA3717380176
+      pslab_server_001_leaf2: TA3717380282
+resource:
+  ipv4_pool:
+    pslab-loop:
+      name: pslab-loop
+      subnets:
+      - network: "10.0.0.0/24"
+    pslab-fabric:
+      name: pslab-fabric
+      subnets:
+      - network: "10.0.1.0/24"
+  asn:
+    pslab-asn:
+      name: pslab-asn
+      ranges:
+      - first: 4200000000
+        last: 4200001000
 
+    
 
 
