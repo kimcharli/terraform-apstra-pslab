@@ -4,18 +4,18 @@ locals {
 
 
 resource "apstra_ipv4_pool" "loop" {
-    name = local.local_resource.ipv4_pool.pslab-loop.name
-    subnets = local.local_resource.ipv4_pool.pslab-loop.subnets 
+    name = local.local_resource.ipv4_pool.terra-loop.name
+    subnets = local.local_resource.ipv4_pool.terra-loop.subnets 
 }
 
 resource "apstra_ipv4_pool" "fabric" {
-    name = local.local_resource.ipv4_pool.pslab-fabric.name
-    subnets = local.local_resource.ipv4_pool.pslab-fabric.subnets
+    name = local.local_resource.ipv4_pool.terra-fabric.name
+    subnets = local.local_resource.ipv4_pool.terra-fabric.subnets
 }
 
 resource "apstra_asn_pool" "asn" {
-    name = local.local_resource.asn.pslab-asn.name
-    ranges = local.local_resource.asn.pslab-asn.ranges
+    name = local.local_resource.asn.terra-asn.name
+    ranges = local.local_resource.asn.terra-asn.ranges
 }
 
 
@@ -37,16 +37,16 @@ locals {
 # Assign ASN pools to fabric roles to eliminate build errors so we can deploy
 resource "apstra_datacenter_resource_pool_allocation" "asn" {
   for_each     = local.asn_pools
-  blueprint_id = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id = apstra_datacenter_blueprint.blueprint-terra.id
   role         = each.key
   pool_ids     = each.value
 }
 
 # Assign IPv4 pools to fabric roles to eliminate build errors so we can deploy
 resource "apstra_datacenter_resource_pool_allocation" "ipv4" {
-  depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
+  depends_on = [ apstra_datacenter_blueprint.blueprint-terra ]
   for_each     = local.ipv4_pools
-  blueprint_id = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id = apstra_datacenter_blueprint.blueprint-terra.id
   role         = each.key
   pool_ids     = each.value
 }

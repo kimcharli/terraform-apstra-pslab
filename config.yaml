@@ -1,7 +1,7 @@
 ---
 logical_device:
   spine:
-    name: pslab-spine  # reuse for interface-map name
+    name: terra-spine  # reuse for interface-map name
     device_profile_id: Juniper_QFX10002-36Q_Junos
     panels:
     - rows: 2
@@ -20,7 +20,7 @@ logical_device:
       spine1: EK069
       spine2: FQ824
   border-leaf:
-    name: pslab-border-leaf
+    name: terra-border-leaf
     device_profile_id: Juniper_QFX5120-48Y_Junos
     panels:
     - rows: 2
@@ -47,10 +47,10 @@ logical_device:
       phy_first_port: 24
       count: 32
     device_allocation:
-      pslab_border_001_leaf1: XH3119430106
-      pslab_border_001_leaf2: XH3119430153
+      terra_border_001_leaf1: XH3119430106
+      terra_border_001_leaf2: XH3119430153
   server-leaf:
-    name: pslab-server-leaf
+    name: terra-server-leaf
     device_profile_id: Juniper_QFX5100-48S_Junos
     panels:
     - rows: 2
@@ -74,21 +74,21 @@ logical_device:
       phy_first_port: 48
       count: 6
     device_allocation:
-      pslab_server_001_leaf1: TA3717380176
-      pslab_server_001_leaf2: TA3717380282
+      terra_server_001_leaf1: TA3717380176
+      terra_server_001_leaf2: TA3717380282
 resource:
   ipv4_pool:
-    pslab-loop:
-      name: pslab-loop
+    terra-loop:
+      name: terra-loop
       subnets:
       - network: "10.0.0.0/24"
-    pslab-fabric:
-      name: pslab-fabric
+    terra-fabric:
+      name: terra-fabric
       subnets:
       - network: "10.0.1.0/24"
   asn:
-    pslab-asn:
-      name: pslab-asn
+    terra-asn:
+      name: terra-asn
       ranges:
       - first: 4200000000
         last: 4200001000

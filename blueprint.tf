@@ -1,6 +1,6 @@
 
 resource "apstra_rack_type" "server-rack" {
-  name                       = "pslab-server"
+  name                       = "terra-server"
   description                = "server rack"
   fabric_connectivity_design = "l3clos"
   leaf_switches = { // leaf switches are a map keyed by switch name, so
@@ -15,7 +15,7 @@ resource "apstra_rack_type" "server-rack" {
 
 
 resource "apstra_rack_type" "border-rack" {
-  name                       = "pslab-border"
+  name                       = "terra-border"
   description                = "border rack"
   fabric_connectivity_design = "l3clos"
   leaf_switches = { // leaf switches are a map keyed by switch name, so
@@ -42,8 +42,8 @@ locals {
 }
 
 
-resource "apstra_template_rack_based" "template-pslab" {
-  name                     = "pslab-template"
+resource "apstra_template_rack_based" "template-terra" {
+  name                     = "terra-template"
   asn_allocation_scheme    = "unique"
   overlay_control_protocol = "evpn"
   spine = {
@@ -59,9 +59,9 @@ resource "apstra_template_rack_based" "template-pslab" {
 
 
 
-resource "apstra_datacenter_blueprint" "blueprint-pslab" {
-  name        = "pslab"
-  template_id = apstra_template_rack_based.template-pslab.id
+resource "apstra_datacenter_blueprint" "blueprint-terra" {
+  name        = "terra"
+  template_id = apstra_template_rack_based.template-terra.id
 }
 
 
@@ -69,7 +69,7 @@ resource "apstra_datacenter_blueprint" "blueprint-pslab" {
 # The only required field for deployment is blueprint_id, but we're ensuring
 # sensible run order and setting a custom commit message.
 resource "apstra_blueprint_deployment" "deploy" {
-  blueprint_id = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id = apstra_datacenter_blueprint.blueprint-terra.id
 
   #ensure that deployment doesn't run before build errors are resolved
   depends_on = [

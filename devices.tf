@@ -70,29 +70,32 @@ resource "apstra_interface_map" "server-leaf" {
 # Assign interface maps to fabric roles to eliminate build errors so we can deploy
 
 resource "apstra_datacenter_device_allocation" "spines" {
-  depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
+  depends_on = [ apstra_datacenter_blueprint.blueprint-terra ]
   for_each         = local.config.logical_device.spine.device_allocation
-  blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id     = apstra_datacenter_blueprint.blueprint-terra.id
   node_name        = each.key
   device_key       = each.value
   interface_map_id = apstra_interface_map.spine.id
+  deploy_mode      = "deploy"
 }
 
 resource "apstra_datacenter_device_allocation" "border-leafs" {
-  depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
+  depends_on = [ apstra_datacenter_blueprint.blueprint-terra ]
   for_each         = local.config.logical_device.border-leaf.device_allocation
-  blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id     = apstra_datacenter_blueprint.blueprint-terra.id
   node_name        = each.key
   device_key       = each.value
   interface_map_id = apstra_interface_map.border-leaf.id
+  deploy_mode      = "deploy"
 }
 
 resource "apstra_datacenter_device_allocation" "server-leafs" {
-  depends_on = [ apstra_datacenter_blueprint.blueprint-pslab ]
+  depends_on = [ apstra_datacenter_blueprint.blueprint-terra ]
   for_each         = local.config.logical_device.server-leaf.device_allocation
-  blueprint_id     = apstra_datacenter_blueprint.blueprint-pslab.id
+  blueprint_id     = apstra_datacenter_blueprint.blueprint-terra.id
   node_name        = each.key
   device_key       = each.value
   interface_map_id = apstra_interface_map.server-leaf.id
+  deploy_mode      = "deploy"
 }
 
