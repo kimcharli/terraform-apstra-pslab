@@ -1,5 +1,5 @@
 locals {
-  devices = yamldecode(file("${path.module}/../config.yaml")).managed_device
+  devices = yamldecode(file("${path.module}/../main/config.yaml")).managed_device
 }
 
 

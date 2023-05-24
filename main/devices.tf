@@ -66,6 +66,8 @@ resource "apstra_interface_map" "server-leaf" {
   ])
 }
 
+# TODO: precheck the devices
+
 
 # Assign interface maps to fabric roles to eliminate build errors so we can deploy
 

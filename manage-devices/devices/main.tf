@@ -16,7 +16,8 @@ output "management_ips" {
 }
 
 output "serial_number" {
-    value = apstra_managed_device.device[*]
+    # value = apstra_managed_device.device[*]
+    value = { for ip, data in apstra_managed_device.device : ip => data.system_id }
 }
 
 

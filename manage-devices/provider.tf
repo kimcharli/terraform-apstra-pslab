@@ -3,7 +3,7 @@ terraform {
     apstra = {
         source = "Juniper/apstra"
         # terraform init --upgrade
-        version = "0.14.1"
+        version = "0.15.1"
     }
   }
 }
