@@ -1,4 +1,12 @@
 ---
+managed_device:
+  junos-default:
+  - 10.85.192.14
+  - 10.85.192.15
+  - 10.85.192.16
+  - 10.85.192.17
+  - 10.85.192.19
+  - 10.85.192.20
 logical_device:
   spine:
     name: terra-spine  # reuse for interface-map name
