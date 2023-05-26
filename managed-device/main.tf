@@ -26,11 +26,20 @@ locals {
     ])
 }
 
-module "managed_device" {
-    source = "./managed_device"
-    id_to_ip = jsonencode(local.device_map)
+
+resource "apstra_managed_device" "all" {
+  count = length(local.device_map)
+  agent_profile_id = local.device_map[count.index].id
+  off_box = true
+  management_ip = local.device_map[count.index].ip
+}
+
+resource "apstra_managed_device_ack" "all" {
+  count = length(local.device_map)
+  agent_id = apstra_managed_device.all[count.index].agent_id
+  device_key = apstra_managed_device.all[count.index].system_id
 }
 
 output "ip_to_serial_number" {
-  value = module.managed_device.ip_to_serial_number
+    value = { for managed_device in apstra_managed_device.all : managed_device.management_ip => managed_device.system_id }
 }
