@@ -34,6 +34,7 @@ locals {
       for device_label, device_key in local.devices[group_name].device_allocation: {
         device_key = device_key
         node_name  = device_label
+        blueprint_id = apstra_datacenter_blueprint.all[index(local.blueprint_list, local.devices[group_name].blueprint)].id
         interface_map_id = apstra_interface_map.all[group_index].id
       }
     ]
@@ -42,9 +43,12 @@ locals {
 
 # Assign interface maps to fabric roles to eliminate build errors so we can deploy
 resource "apstra_datacenter_device_allocation" "all" {
-  depends_on = [ apstra_interface_map.all ]
+  depends_on = [ 
+    apstra_interface_map.all, 
+    apstra_datacenter_blueprint.all
+    ]
   for_each = { for index, i in local.im_sn_pairs: i.device_key => i }
-  blueprint_id     = apstra_datacenter_blueprint.blueprint-terra.id
+  blueprint_id     = each.value.blueprint_id
   node_name        = each.value.node_name
   device_key       = each.value.device_key
   interface_map_id = each.value.interface_map_id

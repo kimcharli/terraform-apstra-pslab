@@ -10,6 +10,7 @@ managed_device:
 logical_device:
   spine:
     name: terra-spine  # reuse for interface-map name
+    blueprint: terra
     device_profile_id: Juniper_QFX10002-36Q_Junos
     panels:
     - rows: 2
@@ -29,6 +30,7 @@ logical_device:
       spine2: FQ824
   border-leaf:
     name: terra-border-leaf
+    blueprint: terra
     device_profile_id: Juniper_QFX5120-48Y_Junos
     panels:
     - rows: 2
@@ -59,6 +61,7 @@ logical_device:
       terra_border_001_leaf2: XH3119430153
   server-leaf:
     name: terra-server-leaf
+    blueprint: terra
     device_profile_id: Juniper_QFX5100-48S_Junos
     panels:
     - rows: 2
@@ -100,7 +103,41 @@ resource:
       ranges:
       - first: 4200000000
         last: 4200001000
+rack_type:
+  server-rack:
+    name: terra-server
+    description: server rack
+    fabric_connectivity_design: l3clos
+    leaf_switches:
+    - logical_device: server-leaf
+      spine_link_count: 1
+      spine_link_speed: 40G
+      redundancy_protocol: esi
+  border-rack:
+    name: terra-border
+    fabric_connectivity_design: l3clos
+    description: border rack
+    leaf_switches:
+    - logical_device: border-leaf
+      spine_link_count: 1
+      spine_link_speed: 40G
+      redundancy_protocol: esi
+template:
+  template-terra:
+    name: terra-template
+    asn_allocation_scheme: unique
+    overlay_control_protocol: evpn
+    spine:
+      logical_device: spine
+      count: 2
+    racks:
+      server-rack: 1
+      border-rack: 1
+blueprint:
+  terra:
+    name: terra
+    template_name: template-terra
 
-    
+
 
 
