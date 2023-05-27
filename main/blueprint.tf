@@ -5,7 +5,8 @@ resource "apstra_rack_type" "server-rack" {
   fabric_connectivity_design = "l3clos"
   leaf_switches = { // leaf switches are a map keyed by switch name, so
     leaf_switch = { // "leaf switch" on this line is the name used by links targeting this switch.
-      logical_device_id   = apstra_logical_device.server-leaf.id
+      # logical_device_id   = apstra_logical_device.server-leaf.id
+      logical_device_id   = apstra_logical_device.all[1].id
       spine_link_count    = 1
       spine_link_speed    = "40G"
       redundancy_protocol = "esi"
@@ -20,7 +21,8 @@ resource "apstra_rack_type" "border-rack" {
   fabric_connectivity_design = "l3clos"
   leaf_switches = { // leaf switches are a map keyed by switch name, so
     leaf_switch = { // "leaf switch" on this line is the name used by links targeting this switch.
-      logical_device_id   = apstra_logical_device.border-leaf.id
+      # logical_device_id   = apstra_logical_device.border-leaf.id
+      logical_device_id   = apstra_logical_device.all[0].id
       spine_link_count    = 1
       spine_link_speed    = "40G"
       redundancy_protocol = "esi"
@@ -47,7 +49,7 @@ resource "apstra_template_rack_based" "template-terra" {
   asn_allocation_scheme    = "unique"
   overlay_control_protocol = "evpn"
   spine = {
-    logical_device_id = apstra_logical_device.spine.id
+    logical_device_id = apstra_logical_device.all.2.id
     count = 2
   }
   rack_infos = {
@@ -73,9 +75,7 @@ resource "apstra_blueprint_deployment" "deploy" {
 
   #ensure that deployment doesn't run before build errors are resolved
   depends_on = [
-    apstra_datacenter_device_allocation.spines,
-    apstra_datacenter_device_allocation.border-leafs,
-    apstra_datacenter_device_allocation.server-leafs,
+    apstra_datacenter_device_allocation.all,
     apstra_datacenter_resource_pool_allocation.asn,
     apstra_datacenter_resource_pool_allocation.ipv4,
   ]
@@ -85,3 +85,5 @@ resource "apstra_blueprint_deployment" "deploy" {
   # environment. Any environment variable may be specified this way.
   comment      = "Deployment by Terraform {{.TerraformVersion}}, Apstra provider {{.ProviderVersion}}, User $USER."
 }
+
+
