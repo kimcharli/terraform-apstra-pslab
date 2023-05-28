@@ -88,21 +88,26 @@ logical_device:
       terra_server_001_leaf1: TA3717380176
       terra_server_001_leaf2: TA3717380282
 resource:
+  asn_pool:
+    terra-asn:  # name
+    - first: 4200000000  # ranges
+      last: 4200001000
+  vni_pool:
+    terra:
+    - first: 200000
+      last: 600000
+  integer_pool:
+    test:
+    - first: 1000
+      last: 2000
   ipv4_pool:
     terra-loop:
-      name: terra-loop
-      subnets:
-      - network: "10.0.0.0/24"
+    - 10.0.0.0/24  # subnets
     terra-fabric:
-      name: terra-fabric
-      subnets:
-      - network: "10.0.1.0/24"
-  asn:
-    terra-asn:
-      name: terra-asn
-      ranges:
-      - first: 4200000000
-        last: 4200001000
+    - 10.0.1.0/24
+  ipv6_pool:
+    terra-fabric:  # subnets
+    - 2001:db8::/32
 rack_type:
   server-rack:
     name: terra-server
@@ -137,6 +142,19 @@ blueprint:
   terra:
     name: terra
     template_name: template-terra
+    asn_pools:
+      spine_asns:
+      - terra-asn # from resource
+      leaf_asns:
+      - terra-asn
+    ipv4_pools:
+      spine_loopback_ips:
+      - terra-loop
+      leaf_loopback_ips:
+      - terra-loop
+      spine_leaf_link_ips:
+      - terra-fabric
+
 
 
 
