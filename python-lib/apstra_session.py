@@ -71,6 +71,36 @@ class CkApstraSession:
         url = f"{self.url_prefix}/design/logical-devices/{id}"
         return self.session.get(url).json()
 
+    def get_items(self, url: str) -> dict:
+        """
+        Get the items from the url.
+
+        Args:
+            The url under /api
+
+        Returns:
+            The items
+        """
+        url = f"{self.url_prefix}/{url}"
+        return self.session.get(url).json()
+
+    def patch_item(self, url: str, spec: dict) -> dict:
+        """
+        Patch an items.
+
+        Args:
+            The url under /api/
+            The patch spec
+
+        Returns:
+            The return
+        """
+        url = f"{self.url_prefix}/{url}"
+        print(f"patch_item({url}, {spec})")
+        return self.session.patch(url, json=spec).json()
+
+
+
     def print_token(self) -> None:
         """
         Print the current authentication token.
