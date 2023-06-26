@@ -36,17 +36,22 @@ resource "apstra_interface_map" "all" {
 #### device allocation
 
 locals {
-  im_sn_pairs = flatten([
-    for group_name, group_value in local.devices: [
-      for device_label, device_key in local.devices[group_name].device_allocation: {
-        device_key = device_key
-        node_name  = device_label
-        blueprint_id = apstra_datacenter_blueprint.all[group_value.blueprint].id
-        interface_map_id = apstra_interface_map.all[group_name].id
-      }
+  device_allocation_list = flatten([
+    for bp_label, bp in yamldecode(file("${path.module}/config.yaml")).blueprint : [
+      for device_label, device in bp.device_allocation : {
+        bp_label = bp_label
+        node_name = device_label
+        device_key = device.device_key
+        interface_map = device.interface_map
+        }
     ]
   ])
+  device_allocation_dict = {
+    for device in local.device_allocation_list : device.node_name => device
+  }
+
 }
+
 
 # Assign interface maps to fabric roles to eliminate build errors so we can deploy
 resource "apstra_datacenter_device_allocation" "all" {
@@ -54,11 +59,11 @@ resource "apstra_datacenter_device_allocation" "all" {
     apstra_interface_map.all, 
     apstra_datacenter_blueprint.all
     ]
-  for_each = { for index, i in local.im_sn_pairs: i.device_key => i }
-  blueprint_id     = each.value.blueprint_id
-  node_name        = each.value.node_name
+  for_each = local.device_allocation_dict
+  blueprint_id     = apstra_datacenter_blueprint.all[each.value.bp_label].id
+  node_name        = each.key
   device_key       = each.value.device_key
-  interface_map_id = each.value.interface_map_id
+  interface_map_id = apstra_interface_map.all[each.value.interface_map].id
   deploy_mode      = "deploy"
 }
 

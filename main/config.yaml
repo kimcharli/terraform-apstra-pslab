@@ -18,9 +18,6 @@ logical_device:
       - port_count: 36
         port_speed: 40G
         port_roles: [ 'leaf', 'generic']
-    device_allocation:
-      spine1: EK069
-      spine2: FQ824
   border-leaf:
     name: terra-border-leaf
     blueprint: terra
@@ -37,9 +34,6 @@ logical_device:
       - port_count: 8
         port_speed: 40G
         port_roles: [ 'spine', 'generic']
-    device_allocation:
-      terra_border_001_leaf1: XH3119430106
-      terra_border_001_leaf2: XH3119430153
   server-leaf:
     name: terra-server-leaf
     blueprint: terra
@@ -53,9 +47,6 @@ logical_device:
       - port_count: 6
         port_speed: 40G
         port_roles: [ 'spine', 'generic']
-    device_allocation:
-      terra_server_001_leaf1: TA3717380176
-      terra_server_001_leaf2: TA3717380282
 interface_map:
   spine:
     name: terra-spine  # reuse for interface-map name
@@ -169,6 +160,25 @@ blueprint:
         vlan_id: 4001
         vni: 504001
         dhcp_servers: ["192.168.100.10", "192.168.200.10"]
+    device_allocation:
+      spine1:
+        device_key: EK069
+        interface_map: spine
+      spine2:
+        device_key: FQ824
+        interface_map: spine
+      terra_server_001_leaf1:
+        device_key: TA3717380176
+        interface_map: server-leaf
+      terra_server_001_leaf2:
+        device_key: TA3717380282
+        interface_map: server-leaf
+      terra_border_001_leaf1:
+        device_key: XH3119430106
+        interface_map: border-leaf
+      terra_border_001_leaf2:
+        device_key: XH3119430153
+        interface_map: border-leaf
 
 
 

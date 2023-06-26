@@ -60,27 +60,59 @@ resource "apstra_datacenter_blueprint" "all" {
 #### blueprint pool allocation
 
 # Assign ASN pools to fabric roles to eliminate build errors so we can deploy
-resource "apstra_datacenter_resource_pool_allocation" "asn" {
-  for_each     = local.blueprint.terra.asn_pools
-  blueprint_id = apstra_datacenter_blueprint.all["terra"].id
-  role         = each.key
-  pool_ids     = [ for x in each.value : apstra_asn_pool.all[x].id ]
+locals {
+  asn_pools_list = flatten([
+    for bp_label, bp in local.blueprint : [
+      for pool_label, pools in bp.asn_pools : {
+        bp_label = bp_label
+        pool_name = pool_label
+        pools = pools
+        }
+    ]
+  ])
+  asn_pool_dict = {
+    for pool in local.asn_pools_list : "${pool.bp_label}-${pool.pool_name}" => pool
+  }
 }
 
+resource "apstra_datacenter_resource_pool_allocation" "asn" {
+  for_each     = local.asn_pool_dict
+  blueprint_id = apstra_datacenter_blueprint.all[each.value.bp_label].id
+  role         = each.value.pool_name
+  pool_ids     = [ for x in each.value.pools : apstra_asn_pool.all[x].id ]
+}
+
+
 # Assign IPv4 pools to fabric roles to eliminate build errors so we can deploy
+locals {
+  ipv4_pools_list = flatten([
+    for bp_label, bp in local.blueprint : [
+      for pool_label, pools in bp.ipv4_pools : {
+        bp_label = bp_label
+        pool_name = pool_label
+        pools = pools
+        }
+    ]
+  ])
+  ipv4_pool_dict = {
+    for pool in local.ipv4_pools_list : "${pool.bp_label}-${pool.pool_name}" => pool
+  }
+}
+
 resource "apstra_datacenter_resource_pool_allocation" "ipv4" {
   depends_on = [ apstra_datacenter_blueprint.all ]
-  for_each     = local.blueprint.terra.ipv4_pools
-  blueprint_id = apstra_datacenter_blueprint.all["terra"].id
-  role         = each.key
-  pool_ids     = [ for x in each.value : apstra_ipv4_pool.all[x].id ]
+  for_each     = local.ipv4_pool_dict
+  blueprint_id = apstra_datacenter_blueprint.all[each.value.bp_label].id
+  role         = each.value.pool_name
+  pool_ids     = [ for x in each.value.pools : apstra_ipv4_pool.all[x].id ]
 }
 
 
 # The only required field for deployment is blueprint_id, but we're ensuring
 # sensible run order and setting a custom commit message.
 resource "apstra_blueprint_deployment" "deploy" {
-  blueprint_id = apstra_datacenter_blueprint.all["terra"].id
+  for_each = local.blueprint
+  blueprint_id = apstra_datacenter_blueprint.all[each.key].id
 
   #ensure that deployment doesn't run before build errors are resolved
   depends_on = [
