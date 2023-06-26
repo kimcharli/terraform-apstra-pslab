@@ -11,7 +11,6 @@ logical_device:
   spine:
     name: terra-spine  # reuse for interface-map name
     blueprint: terra
-    device_profile_id: Juniper_QFX10002-36Q_Junos
     panels:
     - rows: 2
       columns: 18
@@ -19,19 +18,12 @@ logical_device:
       - port_count: 36
         port_speed: 40G
         port_roles: [ 'leaf', 'generic']
-    device_mapping:
-    - ld_panel: 1
-      ld_first_port: 1
-      phy_prefix: et-0/0/
-      phy_first_port: 0
-      count: 36
     device_allocation:
       spine1: EK069
       spine2: FQ824
   border-leaf:
     name: terra-border-leaf
     blueprint: terra
-    device_profile_id: Juniper_QFX5120-48Y_Junos
     panels:
     - rows: 2
       columns: 28
@@ -45,6 +37,40 @@ logical_device:
       - port_count: 8
         port_speed: 40G
         port_roles: [ 'spine', 'generic']
+    device_allocation:
+      terra_border_001_leaf1: XH3119430106
+      terra_border_001_leaf2: XH3119430153
+  server-leaf:
+    name: terra-server-leaf
+    blueprint: terra
+    panels:
+    - rows: 2
+      columns: 27
+      port_groups:
+      - port_count: 48
+        port_speed: 10G
+        port_roles: [ 'access', 'generic']
+      - port_count: 6
+        port_speed: 40G
+        port_roles: [ 'spine', 'generic']
+    device_allocation:
+      terra_server_001_leaf1: TA3717380176
+      terra_server_001_leaf2: TA3717380282
+interface_map:
+  spine:
+    name: terra-spine  # reuse for interface-map name
+    logical_device: spine
+    device_profile_id: Juniper_QFX10002-36Q_Junos
+    device_mapping:
+    - ld_panel: 1
+      ld_first_port: 1
+      phy_prefix: et-0/0/
+      phy_first_port: 0
+      count: 36
+  border-leaf:
+    name: terra-border-leaf
+    logical_device: border-leaf
+    device_profile_id: Juniper_QFX5120-48Y_Junos
     device_mapping:
     - ld_panel: 1
       ld_first_port: 1
@@ -56,23 +82,10 @@ logical_device:
       phy_prefix: et-0/0/
       phy_first_port: 24
       count: 32
-    device_allocation:
-      terra_border_001_leaf1: XH3119430106
-      terra_border_001_leaf2: XH3119430153
   server-leaf:
     name: terra-server-leaf
-    blueprint: terra
+    logical_device: server-leaf
     device_profile_id: Juniper_QFX5100-48S_Junos
-    panels:
-    - rows: 2
-      columns: 27
-      port_groups:
-      - port_count: 48
-        port_speed: 10G
-        port_roles: [ 'access', 'generic']
-      - port_count: 6
-        port_speed: 40G
-        port_roles: [ 'spine', 'generic']
     device_mapping:
     - ld_panel: 1
       ld_first_port: 1
@@ -84,9 +97,6 @@ logical_device:
       phy_prefix: et-0/0/
       phy_first_port: 48
       count: 6
-    device_allocation:
-      terra_server_001_leaf1: TA3717380176
-      terra_server_001_leaf2: TA3717380282
 resource:
   asn_pool:
     terra-asn:  # name

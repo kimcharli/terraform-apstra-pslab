@@ -1,9 +1,9 @@
+
+#### logical_device
 locals {
   devices = yamldecode(file("${path.module}/config.yaml")).logical_device
 }
 
-
-#### logical_device
 
 resource "apstra_logical_device" "all" {
   for_each = local.devices
@@ -13,11 +13,14 @@ resource "apstra_logical_device" "all" {
 
 
 #### interface_map
+locals {
+  interface_maps = yamldecode(file("${path.module}/config.yaml")).interface_map
+}
 
 resource "apstra_interface_map" "all" {
-  for_each = local.devices
-  name = each.key
-  logical_device_id = apstra_logical_device.all[each.key].id
+  for_each = local.interface_maps
+  name = each.value.name
+  logical_device_id = apstra_logical_device.all[each.value.logical_device].id
   device_profile_id = each.value.device_profile_id
   interfaces        = flatten([
     for map in each.value.device_mapping : [
