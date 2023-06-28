@@ -157,6 +157,8 @@ blueprint:
       - terra-fabric
     routing_zones:
       vrf-blue:
+        leaf_loopback_ips:
+        - terra-loop
         vlan_id: 4001
         vni: 504001
         dhcp_servers: ["192.168.100.10", "192.168.200.10"]

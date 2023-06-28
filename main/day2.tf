@@ -6,47 +6,38 @@ locals {
     for bp_label, bp in local.blueprint : [
       for rz_label, rz in bp.routing_zones: {
         name = rz_label
+        bp_label = bp_label
         blueprint_id = apstra_datacenter_blueprint.all[bp_label].id
         vlan_id = rz.vlan_id
         vni = rz.vni
         dhcp_servers = rz.dhcp_servers
+        leaf_loopback_ips = rz.leaf_loopback_ips        
       }
     ]
   ])
+  routing_zones_dict = {
+    for rz in local.routing_zones : "${rz.bp_label}-${rz.name}" => rz
+  }
 }
-
-
-# 
-# 
-# locals {
-#     device_map = flatten([
-#         # iterate managed_devices for each profile_name and its device_list
-#         for profile_name, device_list in local.managed_devices: [
-#             # retrieve the agent_profile_id from the profile name
-#             for agent_profile in data.apstra_agent_profile.each: [
-#               # compose the list of map of id and ip
-#               for ip in device_list:
-#                 {
-#                   id = agent_profile.id
-#                   ip = ip
-#                 }
-#             ]
-#         ] 
-#     ])
-# }
-# 
 
 
 
 resource "apstra_datacenter_routing_zone" "all" {
   depends_on = [ apstra_blueprint_deployment.deploy ]
-  count = length(local.routing_zones)
-  # for_each = local.routing_zones
-  name = local.routing_zones[count.index].name
-  blueprint_id =  local.routing_zones[count.index].blueprint_id
-  vlan_id = local.routing_zones[count.index].vlan_id
-  vni = local.routing_zones[count.index].vni
-  dhcp_servers = local.routing_zones[count.index].dhcp_servers  
+  for_each = local.routing_zones_dict
+  name = each.value.name
+  blueprint_id =  each.value.blueprint_id
+  vlan_id = each.value.vlan_id
+  vni = each.value.vni
+  dhcp_servers = each.value.dhcp_servers  
+}
+
+resource "apstra_datacenter_resource_pool_allocation" "vrf" {
+  for_each = local.routing_zones_dict
+  blueprint_id =  each.value.blueprint_id
+  role         = "leaf_loopback_ips"
+  pool_ids     = [ for x in each.value.leaf_loopback_ips : apstra_ipv4_pool.all[x].id ]
+  routing_zone_id = apstra_datacenter_routing_zone.all[each.key].id
 }
 
 
