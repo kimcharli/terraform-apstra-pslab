@@ -88,6 +88,9 @@ interface_map:
       phy_prefix: et-0/0/
       phy_first_port: 48
       count: 6
+property_sets:
+  apstra_ips:
+    apstra_ips: 10.85.192.50
 resource:
   asn_pool:
     terra-asn:  # name
@@ -162,6 +165,19 @@ blueprint:
         vlan_id: 4001
         vni: 504001
         dhcp_servers: ["192.168.100.10", "192.168.200.10"]
+        vlans:
+          vn100:
+            type: vxlan
+            vlan_id: 100
+            vni: 20100
+            ipv4_connectivity_enabled: true
+            ipv4_virtual_gateway_enabled: true
+            ipv4_virtual_gateway: 192.168.10.1
+            ipv4_subnet: 192.168.10.0/24
+            bindings:
+              terra_border_001_leaf_pair1: []
+              terra_server_001_leaf_pair1: []
+            # dhcp_service_enabled: true
     device_allocation:
       spine1:
         device_key: EK069
@@ -181,6 +197,10 @@ blueprint:
       terra_border_001_leaf2:
         device_key: XH3119430153
         interface_map: border-leaf
+    property_sets:
+      apstra_ips:
+      - apstra_ips
+
 
 
 

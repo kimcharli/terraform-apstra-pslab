@@ -63,7 +63,7 @@ resource "apstra_datacenter_device_allocation" "all" {
   blueprint_id     = apstra_datacenter_blueprint.all[each.value.bp_label].id
   node_name        = each.key
   device_key       = each.value.device_key
-  interface_map_id = apstra_interface_map.all[each.value.interface_map].id
+  initial_interface_map_id = apstra_interface_map.all[each.value.interface_map].id
   deploy_mode      = "deploy"
 }
 

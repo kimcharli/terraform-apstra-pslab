@@ -1,5 +1,4 @@
 #### rack
-
 locals {
   rack_types = yamldecode(file("${path.module}/config.yaml")).rack_type
 }
@@ -106,6 +105,32 @@ resource "apstra_datacenter_resource_pool_allocation" "ipv4" {
   role         = each.value.pool_name
   pool_ids     = [ for x in each.value.pools : apstra_ipv4_pool.all[x].id ]
 }
+
+
+# property_set
+locals {
+  bp_property_set = flatten([
+    for bp_label, bp in local.blueprint : [
+      for ps_label, ps in bp.property_sets : {
+        resource_key = "${bp_label}-${ps_label}"
+        bp_id = apstra_datacenter_blueprint.all[bp_label].id
+        id = apstra_property_set.all[ps_label].id
+        keys = ps
+        }
+    ]
+  ])
+  bp_property_set_dict = {
+    for ps in local.bp_property_set : ps.resource_key => ps
+  }
+}
+
+resource "apstra_datacenter_property_set" "all" {
+  for_each     = local.bp_property_set_dict
+  blueprint_id = each.value.bp_id
+  id = each.value.id
+  keys = each.value.keys
+}
+
 
 
 # The only required field for deployment is blueprint_id, but we're ensuring
