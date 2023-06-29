@@ -67,3 +67,46 @@ resource "apstra_datacenter_device_allocation" "all" {
   deploy_mode      = "deploy"
 }
 
+
+locals {
+  device_label_id = {
+    for device in apstra_datacenter_device_allocation.all : device.node_name => device.node_id
+  }
+}
+
+#### Generic System allocation
+locals {
+  generic_system_list = flatten([
+    for bp_label, bp in local.blueprint : [
+      for gs_label, gs in bp.generic_systems : {
+        blueprint_id = apstra_datacenter_blueprint.all[bp_label].id
+        name = gs_label
+        hostname = gs.hostname
+        tags = gs.tags
+        links = [
+          for link in gs.links: {
+            tags = link.tags
+            lag_mode = link.lag_mode
+            target_switch_id = local.device_label_id[link.target_switch]
+            target_switch_if_name = link.target_switch_if_name
+            target_switch_if_transform_id = link.target_switch_if_transform_id
+            group_label = link.group_label
+          }
+        ]
+      }
+    ]
+  ])
+  generic_system_dict = {
+    for gs in local.generic_system_list : gs.name => gs
+  }
+
+}
+
+resource "apstra_datacenter_generic_system" "all" {
+  for_each = local.generic_system_dict
+  blueprint_id = each.value.blueprint_id
+  name = each.value.name
+  hostname = each.value.hostname
+  tags = each.value.tags
+  links = each.value.links
+}

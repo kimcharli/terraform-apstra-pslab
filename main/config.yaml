@@ -200,6 +200,25 @@ blueprint:
     property_sets:
       apstra_ips:
       - apstra_ips
+    generic_systems:
+      gs-001:
+        hostname: gs-001.test.net
+        tags: [ 'gs' ]
+        links:
+        - target_switch: terra_border_001_leaf1
+          target_switch_if_name: xe-0/0/0
+          target_switch_if_transform_id: 2
+          group_label: bond0
+          lag_mode: lacp_active
+          tags: [ 10g ]
+        - target_switch: terra_border_001_leaf2
+          target_switch_if_name: xe-0/0/0
+          target_switch_if_transform_id: 2
+          group_label: bond0
+          lag_mode: lacp_active
+          tags: [ 10g ]
+
+
 
 
 
