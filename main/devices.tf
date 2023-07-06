@@ -103,6 +103,8 @@ locals {
 }
 
 resource "apstra_datacenter_generic_system" "all" {
+  # should be dependent on apstra_blueprint_deployment.deploy
+  depends_on = [ apstra_blueprint_deployment.deploy ]
   for_each = local.generic_system_dict
   blueprint_id = each.value.blueprint_id
   name = each.value.name
